@@ -1,9 +1,13 @@
 package main
 
 import (
-	"github.com/subrat-dwi/passman-cli/internal/cli"
+	"github.com/subrat-dwi/passman-cli/cmd"
+	"github.com/subrat-dwi/passman-cli/internal/app"
 )
 
 func main() {
-	cli.Exectute()
+	app := app.New()
+
+	rootCmd := cmd.NewRootCmd(app)
+	rootCmd.Execute()
 }
