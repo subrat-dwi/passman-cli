@@ -5,28 +5,37 @@ import (
 	"time"
 
 	"github.com/subrat-dwi/passman-cli/internal/api"
+	"github.com/subrat-dwi/passman-cli/internal/config"
 	"github.com/subrat-dwi/passman-cli/internal/service"
 	"github.com/subrat-dwi/passman-cli/internal/storage/keyring"
 )
 
+// App is the main application struct that holds all services and configurations.
 type App struct {
-	AuthService *service.AuthService
+	AuthService     *service.AuthService
+	PasswordService *service.PasswordService
 }
 
 func New() *App {
-	baseURL := "https://shubserver.onrender.com"
+	// Initialize configuration
+	config.Init()
+	baseURL := config.Get("api_base_url")
 
+	// Set up HTTP client with timeout
 	httpClient := &http.Client{
 		Timeout: 10 * time.Second,
 	}
 
+	// Initialize API clients
 	client := &api.Client{
 		BaseURL: baseURL,
 		HTTP:    httpClient,
 	}
 
 	authAPI := api.NewAuthAPI(client)
+	passwordAPI := api.NewPasswordAPI(client)
 
+	// Initialize services
 	authService := &service.AuthService{
 		API: authAPI,
 		Storage: &keyring.TokenStore{
@@ -35,7 +44,17 @@ func New() *App {
 		},
 	}
 
+	passwordService := &service.PasswordService{
+		API: passwordAPI,
+		Storage: &keyring.TokenStore{
+			Service: "passman",
+			User:    "default",
+		},
+	}
+
+	// Return the initialized App instance
 	return &App{
-		AuthService: authService,
+		AuthService:     authService,
+		PasswordService: passwordService,
 	}
 }
