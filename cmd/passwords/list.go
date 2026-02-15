@@ -1,10 +1,10 @@
 package passwords
 
 import (
-	"fmt"
-
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/subrat-dwi/passman-cli/internal/app"
+	"github.com/subrat-dwi/passman-cli/internal/ui/list"
 )
 
 func NewListCmd(app *app.App) *cobra.Command {
@@ -17,11 +17,9 @@ func NewListCmd(app *app.App) *cobra.Command {
 				return err
 			}
 
-			for _, password := range passwords {
-				fmt.Println(password.Name, password.Username)
-			}
-
-			return nil
+			p := tea.NewProgram(list.NewListModel(app, passwords))
+			_, err = p.Run()
+			return err
 		},
 	}
 

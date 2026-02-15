@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -21,9 +20,9 @@ func Init() {
 	viper.SetDefault("api_base_url", "https://shubserver.onrender.com")
 	viper.SetDefault("default_vault", "personal")
 
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("No config file found, using defaults")
-	}
+	// if err := viper.ReadInConfig(); err != nil {
+	// 	fmt.Println("No config file found, using defaults")
+	// }
 }
 
 // Get retreives a value

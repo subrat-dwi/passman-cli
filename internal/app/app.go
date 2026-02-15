@@ -7,7 +7,7 @@ import (
 	"github.com/subrat-dwi/passman-cli/internal/api"
 	"github.com/subrat-dwi/passman-cli/internal/config"
 	"github.com/subrat-dwi/passman-cli/internal/service"
-	"github.com/subrat-dwi/passman-cli/internal/storage/keyring"
+	"github.com/subrat-dwi/passman-cli/internal/storage"
 )
 
 // App is the main application struct that holds all services and configurations.
@@ -36,20 +36,19 @@ func New() *App {
 	passwordAPI := api.NewPasswordAPI(client)
 
 	// Initialize services
+	storage := storage.Store{
+		Service: "passman",
+		User:    "default",
+	}
+
 	authService := &service.AuthService{
-		API: authAPI,
-		Storage: &keyring.TokenStore{
-			Service: "passman",
-			User:    "default",
-		},
+		API:     authAPI,
+		Storage: &storage,
 	}
 
 	passwordService := &service.PasswordService{
-		API: passwordAPI,
-		Storage: &keyring.TokenStore{
-			Service: "passman",
-			User:    "default",
-		},
+		API:     passwordAPI,
+		Storage: &storage,
 	}
 
 	// Return the initialized App instance
@@ -57,4 +56,9 @@ func New() *App {
 		AuthService:     authService,
 		PasswordService: passwordService,
 	}
+}
+
+func (a *App) ResetState() {
+	a.AuthService = nil
+	a.PasswordService = nil
 }

@@ -1,44 +1,33 @@
 package auth
 
 import (
-	"errors"
 	"fmt"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 	"github.com/subrat-dwi/passman-cli/internal/app"
+	"github.com/subrat-dwi/passman-cli/internal/ui/login"
 )
 
 func NewLoginCmd(app *app.App) *cobra.Command {
-	var (
-		email         string
-		passwordStdin bool
-	)
-
 	loginCmd := &cobra.Command{
-		Use:   "login",
-		Short: "Login into your account",
+		Use:     "login",
+		Short:   "Login into your Passman account",
+		Long:    "Login into your account using your email and master password",
+		Aliases: []string{"signin"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if email == "" {
-				return errors.New("email required")
-			}
 
-			password, err := readPassword(passwordStdin)
+			p := tea.NewProgram(login.NewLoginModel(app))
+			result, err := p.Run()
 			if err != nil {
 				return err
 			}
 
-			if err = app.AuthService.Login(email, password); err != nil {
-				return err
+			if m, ok := result.(login.LoginModel); ok && m.Success() {
+				fmt.Println("Login Successful")
 			}
-
-			fmt.Println("Login Successful")
 			return nil
 		},
 	}
-
-	loginCmd.Flags().StringVarP(&email, "email", "e", "", "Email for login")
-	loginCmd.Flags().BoolVarP(&passwordStdin, "password-stdin", "", false, "Read password from stdin")
-	loginCmd.MarkFlagRequired("email")
-
 	return loginCmd
 }
