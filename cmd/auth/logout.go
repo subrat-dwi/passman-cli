@@ -8,9 +8,10 @@ import (
 
 func NewLogoutCmd(app *app.App) *cobra.Command {
 	return &cobra.Command{
-		Use:   "logout",
-		Short: "Logout from Passman",
-		Long:  "Logout and clear your credentials",
+		Use:     "logout",
+		Short:   "Logout from Passman",
+		Long:    "Logout and clear your credentials",
+		Aliases: []string{"signout", "out"},
 		Run: func(cmd *cobra.Command, args []string) {
 			app.AuthService.Storage.DeleteAccessToken()
 			app.AuthService.Storage.DeleteSalt()

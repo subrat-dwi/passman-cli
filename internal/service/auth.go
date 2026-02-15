@@ -1,12 +1,11 @@
 package service
 
 import (
-	"fmt"
-
 	"github.com/subrat-dwi/passman-cli/internal/agent"
 	"github.com/subrat-dwi/passman-cli/internal/api"
 	"github.com/subrat-dwi/passman-cli/internal/crypto"
 	"github.com/subrat-dwi/passman-cli/internal/storage"
+	"github.com/subrat-dwi/passman-cli/internal/usererror"
 )
 
 // KeyVerifierPlaintext is the known value used to verify the master password
@@ -19,34 +18,34 @@ type AuthService struct {
 
 func (s *AuthService) Register(email, password string) error {
 	if email == "" || password == "" {
-		return fmt.Errorf("email and password cannot be empty")
+		return usererror.ErrEmptyFields
 	}
 
 	resp, err := s.API.Register(email, password)
 	if err != nil {
-		return fmt.Errorf("registration failed: %w", err)
+		return err // API errors are already user-friendly
 	}
 
 	if err := s.Storage.SaveSalt(resp.Salt); err != nil {
-		return fmt.Errorf("failed to save salt: %w", err)
+		return usererror.Wrap(usererror.ErrKeyringAccess, err)
 	}
 
 	if err := s.Storage.SaveAccessToken(resp.AccessToken); err != nil {
-		return fmt.Errorf("failed to save access token: %w", err)
+		return usererror.Wrap(usererror.ErrKeyringAccess, err)
 	}
 
 	key := crypto.DeriveKey(password, resp.Salt)
 	if err := agent.Unlock(crypto.EncodeBase64(key), 600); err != nil {
-		return fmt.Errorf("failed to unlock agent: %w", err)
+		return usererror.Wrap(usererror.ErrAgentConnection, err)
 	}
 
 	// Save key verifier for password validation later
 	ciphertext, nonce, err := agent.Encrypt(KeyVerifierPlaintext)
 	if err != nil {
-		return fmt.Errorf("failed to create key verifier: %w", err)
+		return usererror.Wrap(usererror.ErrEncryptFailed, err)
 	}
 	if err := s.Storage.SaveKeyVerifier(ciphertext, nonce); err != nil {
-		return fmt.Errorf("failed to save key verifier: %w", err)
+		return usererror.Wrap(usererror.ErrKeyringAccess, err)
 	}
 
 	return nil
@@ -54,34 +53,34 @@ func (s *AuthService) Register(email, password string) error {
 
 func (s *AuthService) Login(email, password string) error {
 	if email == "" || password == "" {
-		return fmt.Errorf("email and password cannot be empty")
+		return usererror.ErrEmptyFields
 	}
 
 	resp, err := s.API.Login(email, password)
 	if err != nil {
-		return fmt.Errorf("login failed: %w", err)
+		return err // API errors are already user-friendly
 	}
 
 	if err := s.Storage.SaveSalt(resp.Salt); err != nil {
-		return fmt.Errorf("failed to save salt: %w", err)
+		return usererror.Wrap(usererror.ErrKeyringAccess, err)
 	}
 
 	if err := s.Storage.SaveAccessToken(resp.AccessToken); err != nil {
-		return fmt.Errorf("failed to save access token: %w", err)
+		return usererror.Wrap(usererror.ErrKeyringAccess, err)
 	}
 
 	key := crypto.DeriveKey(password, resp.Salt)
 	if err := agent.Unlock(crypto.EncodeBase64(key), 600); err != nil {
-		return fmt.Errorf("failed to unlock agent: %w", err)
+		return usererror.Wrap(usererror.ErrAgentConnection, err)
 	}
 
 	// Save key verifier for password validation later
 	ciphertext, nonce, err := agent.Encrypt(KeyVerifierPlaintext)
 	if err != nil {
-		return fmt.Errorf("failed to create key verifier: %w", err)
+		return usererror.Wrap(usererror.ErrEncryptFailed, err)
 	}
 	if err := s.Storage.SaveKeyVerifier(ciphertext, nonce); err != nil {
-		return fmt.Errorf("failed to save key verifier: %w", err)
+		return usererror.Wrap(usererror.ErrKeyringAccess, err)
 	}
 
 	return nil

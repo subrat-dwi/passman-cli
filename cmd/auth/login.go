@@ -14,7 +14,7 @@ func NewLoginCmd(app *app.App) *cobra.Command {
 		Use:     "login",
 		Short:   "Login into your Passman account",
 		Long:    "Login into your account using your email and master password",
-		Aliases: []string{"signin"},
+		Aliases: []string{"signin", "in"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			p := tea.NewProgram(login.NewLoginModel(app))

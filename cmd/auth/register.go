@@ -14,7 +14,7 @@ func NewRegisterCmd(app *app.App) *cobra.Command {
 		Use:     "register",
 		Short:   "Register a new account",
 		Long:    "Register a new account with your email and master password",
-		Aliases: []string{"signup"},
+		Aliases: []string{"signup", "join"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			p := tea.NewProgram(register.NewRegisterModel(app))

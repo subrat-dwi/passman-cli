@@ -13,7 +13,7 @@ import (
 
 func main() {
 
-	// Only start agent server when command is exactly "pman agent" (no subcommands)
+	// start agent server when command is exactly "pman agent"
 	if len(os.Args) == 2 && os.Args[1] == "agent" {
 		agent.Run()
 		return
@@ -34,11 +34,6 @@ func ensureAgentRunning() {
 
 	// start agent as a detached background process
 	cmd := exec.Command(os.Args[0], "agent")
-	// if runtime.GOOS == "windows" {
-	// 	cmd.SysProcAttr = &syscall.SysProcAttr{
-	// 		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
-	// 	}
-	// }), 600
 	cmd.Start()
 
 	// wait briefly (avoid race)

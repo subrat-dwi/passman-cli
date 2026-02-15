@@ -2,10 +2,12 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
+
+	"github.com/subrat-dwi/passman-cli/internal/usererror"
 )
 
 type APIError struct {
@@ -14,7 +16,7 @@ type APIError struct {
 }
 
 func (e *APIError) Error() string {
-	return fmt.Sprintf("api error (%d): %s", e.Status, e.Message)
+	return usererror.FromAPIError(e.Status, e.Message).Error()
 }
 
 func parseAPIError(resp *http.Response) error {
@@ -25,20 +27,22 @@ func parseAPIError(resp *http.Response) error {
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil || len(data) == 0 {
-		return &APIError{
-			Status:  resp.StatusCode,
-			Message: "unknown api error",
-		}
+		return usererror.FromAPIError(resp.StatusCode, "Server returned an empty response")
 	}
 
 	if err := json.Unmarshal(data, &body); err != nil {
-		return &APIError{
-			Status:  resp.StatusCode,
-			Message: string(data),
+		// Try to extract a readable message from raw response
+		raw := strings.TrimSpace(string(data))
+		if len(raw) > 100 {
+			raw = raw[:100] + "..."
 		}
+		return usererror.FromAPIError(resp.StatusCode, raw)
 	}
 
 	status, _ := strconv.Atoi(body.Status)
+	if status == 0 {
+		status = resp.StatusCode
+	}
 
 	return &APIError{
 		Status:  status,

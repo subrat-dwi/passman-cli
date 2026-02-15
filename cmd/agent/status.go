@@ -11,6 +11,7 @@ func newStatusCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
 		Short: "Check agent status",
+		Long:  "Check the current status of the Vault Agent",
 		Run: func(cmd *cobra.Command, args []string) {
 			unlocked, expires, err := agent.Status()
 			if err != nil {

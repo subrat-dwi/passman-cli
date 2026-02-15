@@ -9,8 +9,10 @@ import (
 
 func newLockCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "lock",
-		Short: "Lock the agent (forget encryption key)",
+		Use:     "lock",
+		Short:   "Lock the agent",
+		Long:    "Lock the vault agent, wiping the encryption key from memory. This will require re-authentication to unlock and access your vault.",
+		Aliases: []string{"stop"},
 		Run: func(cmd *cobra.Command, args []string) {
 			err := agent.Lock()
 			if err != nil {

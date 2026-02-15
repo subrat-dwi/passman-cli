@@ -2,10 +2,10 @@ package storage
 
 import (
 	"encoding/hex"
-	"errors"
 	"strings"
 
 	"github.com/subrat-dwi/passman-cli/internal/crypto"
+	"github.com/subrat-dwi/passman-cli/internal/usererror"
 	"github.com/zalando/go-keyring"
 )
 
@@ -16,7 +16,7 @@ func (s *Store) SaveSalt(salt string) error {
 func (s *Store) GetSalt() ([]byte, error) {
 	salt, err := keyring.Get(s.Service, s.User+"_salt")
 	if err != nil {
-		return nil, err
+		return nil, usererror.ErrNoSaltFound
 	}
 	// Try hex first, then base64
 	if b, err := hex.DecodeString(salt); err == nil {
@@ -42,7 +42,7 @@ func (s *Store) GetKeyVerifier() (ciphertext, nonce string, err error) {
 	}
 	parts := strings.SplitN(verifier, ":", 2)
 	if len(parts) != 2 {
-		return "", "", errors.New("invalid key verifier format")
+		return "", "", usererror.New("Stored credentials are corrupted", "Please login again to fix this")
 	}
 	return parts[0], parts[1], nil
 }

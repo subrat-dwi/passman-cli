@@ -4,9 +4,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/subrat-dwi/passman-cli/internal/ipc"
+	"github.com/subrat-dwi/passman-cli/internal/usererror"
 )
 
 // Unlock tells the agent to store the provided base64-encoded key and start its TTL countdown.
@@ -30,7 +30,7 @@ func Status() (unlocked bool, expiresSeconds int, err error) {
 
 	m, ok := resp.Data.(map[string]any)
 	if !ok {
-		return false, 0, fmt.Errorf("unexpected status payload: %T", resp.Data)
+		return false, 0, usererror.New("Invalid agent response", "Try restarting the agent")
 	}
 
 	if v, ok := m["unlocked"].(bool); ok {
@@ -51,7 +51,7 @@ func Encrypt(plaintext string) (ciphertextBase64, nonceBase64 string, err error)
 
 	m, ok := resp.Data.(map[string]any)
 	if !ok {
-		return "", "", fmt.Errorf("unexpected encrypt payload: %T", resp.Data)
+		return "", "", usererror.ErrEncryptFailed
 	}
 
 	return m["ciphertext"].(string), m["nonce"].(string), nil
@@ -66,13 +66,13 @@ func Decrypt(ciphertextBase64, nonceBase64 string) (string, error) {
 
 	plaintextBase64, ok := resp.Data.(string)
 	if !ok {
-		return "", fmt.Errorf("unexpected decrypt payload: %T", resp.Data)
+		return "", usererror.ErrDecryptFailed
 	}
 
 	// Decode base64 plaintext
 	plaintext, err := base64.RawStdEncoding.DecodeString(plaintextBase64)
 	if err != nil {
-		return "", fmt.Errorf("failed to decode plaintext: %w", err)
+		return "", usererror.ErrDecryptFailed
 	}
 	return string(plaintext), nil
 }
@@ -81,17 +81,17 @@ func Decrypt(ciphertextBase64, nonceBase64 string) (string, error) {
 func send(req Request) (Response, error) {
 	conn, err := ipc.Dial()
 	if err != nil {
-		return Response{}, err
+		return Response{}, usererror.Wrap(usererror.ErrAgentNotRunning, err)
 	}
 	defer conn.Close()
 
 	if err := json.NewEncoder(conn).Encode(req); err != nil {
-		return Response{}, err
+		return Response{}, usererror.Wrap(usererror.ErrAgentConnection, err)
 	}
 
 	var resp Response
 	if err := json.NewDecoder(conn).Decode(&resp); err != nil {
-		return Response{}, err
+		return Response{}, usererror.Wrap(usererror.ErrAgentConnection, err)
 	}
 
 	if !resp.OK {

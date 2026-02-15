@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/subrat-dwi/passman-cli/internal/crypto"
 	"github.com/subrat-dwi/passman-cli/internal/passwordmanager"
 	"github.com/subrat-dwi/passman-cli/internal/storage"
+	"github.com/subrat-dwi/passman-cli/internal/usererror"
 	"golang.org/x/term"
 )
 
@@ -23,30 +23,30 @@ type PasswordService struct {
 func (s *PasswordService) PromptAndUnlock() error {
 	salt, err := s.Storage.GetSalt()
 	if err != nil {
-		return errors.New("no salt found - please login first")
+		return usererror.ErrNoSaltFound
 	}
 
-	fmt.Print("\nAgent locked. Enter master password to unlock: ")
+	fmt.Print("\nVault locked. Enter master password: ")
 	passwordBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Println()
 	if err != nil {
-		return fmt.Errorf("failed to read password: %w", err)
+		return usererror.New("Could not read password", "Make sure you're running this in a terminal")
 	}
 
 	if len(passwordBytes) == 0 {
-		return errors.New("password cannot be empty")
+		return usererror.New("Password cannot be empty", "Please enter your master password")
 	}
 
 	key := crypto.DeriveKey(string(passwordBytes), crypto.EncodeBase64(salt))
 	if err := agent.Unlock(crypto.EncodeBase64(key), 600); err != nil {
-		return fmt.Errorf("failed to unlock agent: %w", err)
+		return usererror.Wrap(usererror.ErrAgentConnection, err)
 	}
 
 	// Verify the password by decrypting the key verifier
 	ciphertext, nonce, err := s.Storage.GetKeyVerifier()
 	if err != nil {
 		// No verifier stored - older login, allow but warn
-		fmt.Println("Warning: Cannot verify password (please re-login to enable verification)")
+		fmt.Println("  Note: Password verification not available. Re-login to enable it.")
 		return nil
 	}
 
@@ -54,10 +54,10 @@ func (s *PasswordService) PromptAndUnlock() error {
 	if err != nil || plaintext != KeyVerifierPlaintext {
 		// Wrong password - lock agent and return error
 		agent.Lock()
-		return errors.New("incorrect master password")
+		return usererror.ErrInvalidPassword
 	}
 
-	fmt.Println("Vault Agent unlocked.")
+	fmt.Println("  Vault unlocked successfully.")
 	return nil
 }
 
@@ -69,7 +69,7 @@ func isAgentLocked(err error) bool {
 func (s *PasswordService) Create(name, username, password string) error {
 	token, err := s.Storage.GetAccessToken()
 	if err != nil {
-		return errors.New("Please Login before using this command")
+		return usererror.ErrNotLoggedIn
 	}
 
 	ciphertext, nonce, err := agent.Encrypt(password)
@@ -81,7 +81,7 @@ func (s *PasswordService) Create(name, username, password string) error {
 		ciphertext, nonce, err = agent.Encrypt(password)
 	}
 	if err != nil {
-		return err
+		return usererror.Wrap(usererror.ErrEncryptFailed, err)
 	}
 
 	return s.API.CreatePassword(token, passwordmanager.PasswordFullEntry{
@@ -95,7 +95,7 @@ func (s *PasswordService) Create(name, username, password string) error {
 func (s *PasswordService) List() ([]passwordmanager.PasswordEntry, error) {
 	token, err := s.Storage.GetAccessToken()
 	if err != nil {
-		return nil, errors.New("Please Login before using this command")
+		return nil, usererror.ErrNotLoggedIn
 	}
 
 	passwords, err := s.API.ListPasswords(token)
@@ -127,7 +127,7 @@ type DecryptedPassword struct {
 func (s *PasswordService) Get(id string) (*DecryptedPassword, error) {
 	token, err := s.Storage.GetAccessToken()
 	if err != nil {
-		return nil, errors.New("Please Login before using this command")
+		return nil, usererror.ErrNotLoggedIn
 	}
 
 	entry, err := s.API.GetPassword(token, id)
@@ -145,7 +145,7 @@ func (s *PasswordService) Get(id string) (*DecryptedPassword, error) {
 		plaintext, err = agent.Decrypt(entry.Password, entry.Nonce)
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to decrypt password: %w", err)
+		return nil, usererror.Wrap(usererror.ErrDecryptFailed, err)
 	}
 
 	return &DecryptedPassword{
@@ -161,7 +161,7 @@ func (s *PasswordService) Get(id string) (*DecryptedPassword, error) {
 func (s *PasswordService) Update(id, name, username, password string) error {
 	token, err := s.Storage.GetAccessToken()
 	if err != nil {
-		return errors.New("Please Login before using this command")
+		return usererror.ErrNotLoggedIn
 	}
 
 	ciphertext, nonce, err := agent.Encrypt(password)
@@ -173,7 +173,7 @@ func (s *PasswordService) Update(id, name, username, password string) error {
 		ciphertext, nonce, err = agent.Encrypt(password)
 	}
 	if err != nil {
-		return err
+		return usererror.Wrap(usererror.ErrEncryptFailed, err)
 	}
 
 	return s.API.UpdatePassword(token, id, passwordmanager.PasswordFullEntry{
@@ -187,7 +187,7 @@ func (s *PasswordService) Update(id, name, username, password string) error {
 func (s *PasswordService) Delete(id string) error {
 	token, err := s.Storage.GetAccessToken()
 	if err != nil {
-		return errors.New("Please Login before using this command")
+		return usererror.ErrNotLoggedIn
 	}
 
 	return s.API.DeletePassword(token, id)

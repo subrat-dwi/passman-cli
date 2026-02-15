@@ -1,10 +1,11 @@
 package validation
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/subrat-dwi/passman-cli/internal/usererror"
 )
 
 var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
@@ -13,13 +14,13 @@ var emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]
 func ValidateEmail(email string) error {
 	email = strings.TrimSpace(email)
 	if email == "" {
-		return fmt.Errorf("email cannot be empty")
+		return usererror.New("Email is required", "Enter your email address")
 	}
 	if len(email) > 254 {
-		return fmt.Errorf("email is too long (max 254 characters)")
+		return usererror.New("Email is too long", "Maximum 254 characters allowed")
 	}
 	if !emailRegex.MatchString(email) {
-		return fmt.Errorf("invalid email format")
+		return usererror.New("Invalid email format", "Use format: user@example.com")
 	}
 	return nil
 }
@@ -36,13 +37,13 @@ const (
 // ValidateMasterPassword validates the master password with detailed feedback
 func ValidateMasterPassword(password string) error {
 	if password == "" {
-		return fmt.Errorf("password cannot be empty")
+		return usererror.New("Password is required", "Enter your master password")
 	}
 	if len(password) < 8 {
-		return fmt.Errorf("password must be at least 8 characters")
+		return usererror.New("Password too short", "Use at least 8 characters")
 	}
 	if len(password) > 128 {
-		return fmt.Errorf("password is too long (max 128 characters)")
+		return usererror.New("Password too long", "Maximum 128 characters allowed")
 	}
 
 	var hasUpper, hasLower, hasDigit, hasSpecial bool
@@ -67,14 +68,14 @@ func ValidateMasterPassword(password string) error {
 		missing = append(missing, "lowercase letter")
 	}
 	if !hasDigit {
-		missing = append(missing, "digit")
+		missing = append(missing, "number")
 	}
 	if !hasSpecial {
-		missing = append(missing, "special character")
+		missing = append(missing, "special character (!@#$...)")
 	}
 
 	if len(missing) > 2 {
-		return fmt.Errorf("password needs: %s", strings.Join(missing, ", "))
+		return usererror.New("Password too weak", "Add: "+strings.Join(missing, ", "))
 	}
 
 	return nil
@@ -134,13 +135,13 @@ func GetPasswordStrength(password string) (PasswordStrength, string) {
 func ValidateServiceName(name string) error {
 	name = strings.TrimSpace(name)
 	if name == "" {
-		return fmt.Errorf("service name cannot be empty")
+		return usererror.New("Service name is required", "Enter a name like 'Gmail' or 'Netflix'")
 	}
 	if len(name) < 1 {
-		return fmt.Errorf("service name must be at least 1 character")
+		return usererror.New("Service name too short", "Enter at least 1 character")
 	}
 	if len(name) > 64 {
-		return fmt.Errorf("service name is too long (max 64 characters)")
+		return usererror.New("Service name too long", "Maximum 64 characters allowed")
 	}
 	return nil
 }
@@ -149,10 +150,10 @@ func ValidateServiceName(name string) error {
 func ValidateUsername(username string) error {
 	username = strings.TrimSpace(username)
 	if username == "" {
-		return fmt.Errorf("username cannot be empty")
+		return usererror.New("Username is required", "Enter your username or email for this service")
 	}
 	if len(username) > 128 {
-		return fmt.Errorf("username is too long (max 128 characters)")
+		return usererror.New("Username too long", "Maximum 128 characters allowed")
 	}
 	return nil
 }
@@ -160,10 +161,10 @@ func ValidateUsername(username string) error {
 // ValidatePassword validates the password for entries (not master password)
 func ValidatePassword(password string) error {
 	if password == "" {
-		return fmt.Errorf("password cannot be empty")
+		return usererror.New("Password is required", "Enter the password for this service")
 	}
 	if len(password) > 256 {
-		return fmt.Errorf("password is too long (max 256 characters)")
+		return usererror.New("Password too long", "Maximum 256 characters allowed")
 	}
 	return nil
 }
