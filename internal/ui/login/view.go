@@ -28,18 +28,18 @@ func (m LoginModel) View() string {
 		}
 
 		// Show password strength indicator
-		if i == fieldPassword && m.pwStrength != "" && m.fieldErr[i] == "" {
-			strengthColor := ""
-			switch m.pwStrength {
-			case "Strong":
-				strengthColor = "✓"
-			case "Fair":
-				strengthColor = "○"
-			default:
-				strengthColor = "⚠"
-			}
-			b.WriteString(fmt.Sprintf("              %s Strength: %s\n", strengthColor, m.pwStrength))
-		}
+		// if i == fieldPassword && m.pwStrength != "" && m.fieldErr[i] == "" {
+		// 	strengthColor := ""
+		// 	switch m.pwStrength {
+		// 	case "Strong":
+		// 		strengthColor = "✓"
+		// 	case "Fair":
+		// 		strengthColor = "○"
+		// 	default:
+		// 		strengthColor = "⚠"
+		// 	}
+		// 	b.WriteString(fmt.Sprintf("              %s Strength: %s\n", strengthColor, m.pwStrength))
+		// }
 	}
 
 	b.WriteString("\n")

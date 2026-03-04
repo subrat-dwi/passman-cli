@@ -10,6 +10,31 @@ import (
 	"github.com/subrat-dwi/passman-cli/internal/usererror"
 )
 
+// wrapNetworkError converts low-level network errors into user-friendly messages
+func wrapNetworkError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	errMsg := strings.ToLower(err.Error())
+
+	// Timeout errors (including Render cold start)
+	if strings.Contains(errMsg, "timeout") ||
+		strings.Contains(errMsg, "deadline exceeded") ||
+		strings.Contains(errMsg, "context deadline") {
+		return usererror.ErrTimeout
+	}
+
+	// Connection errors
+	if strings.Contains(errMsg, "connection refused") ||
+		strings.Contains(errMsg, "no such host") ||
+		strings.Contains(errMsg, "network is unreachable") {
+		return usererror.ErrServerUnreachable
+	}
+
+	return usererror.ErrServerUnreachable
+}
+
 type APIError struct {
 	Status  int
 	Message string `json:"message"`

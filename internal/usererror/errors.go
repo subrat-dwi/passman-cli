@@ -31,7 +31,7 @@ var (
 	// Network errors
 	ErrServerUnreachable = New("Cannot reach server", "Check your internet connection and try again")
 	ErrServerError       = New("Server error occurred", "The server is having issues. Please try again later")
-	ErrTimeout           = New("Request timed out", "Check your internet connection and try again")
+	ErrTimeout           = New("Server is starting up", "The server was sleeping and is waking up. Please try again in 10-30 seconds")
 
 	// Password entry errors
 	ErrPasswordNotFound = New("Password not found", "The password entry may have been deleted")

@@ -35,7 +35,7 @@ func (p *PasswordAPI) ListPasswords(accessToken string) ([]passwordmanager.Passw
 
 	resp, err := p.client.HTTP.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, wrapNetworkError(err)
 	}
 	defer resp.Body.Close()
 
@@ -67,7 +67,7 @@ func (p *PasswordAPI) CreatePassword(accessToken string, entry passwordmanager.P
 
 	resp, err := p.client.HTTP.Do(req)
 	if err != nil {
-		return err
+		return wrapNetworkError(err)
 	}
 	defer resp.Body.Close()
 
@@ -91,7 +91,7 @@ func (p *PasswordAPI) GetPassword(accessToken, id string) (*passwordmanager.Pass
 
 	resp, err := p.client.HTTP.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, wrapNetworkError(err)
 	}
 	defer resp.Body.Close()
 
@@ -123,7 +123,7 @@ func (p *PasswordAPI) UpdatePassword(accessToken, id string, entry passwordmanag
 
 	resp, err := p.client.HTTP.Do(req)
 	if err != nil {
-		return err
+		return wrapNetworkError(err)
 	}
 	defer resp.Body.Close()
 
@@ -147,7 +147,7 @@ func (p *PasswordAPI) DeletePassword(accessToken, id string) error {
 
 	resp, err := p.client.HTTP.Do(req)
 	if err != nil {
-		return err
+		return wrapNetworkError(err)
 	}
 	defer resp.Body.Close()
 

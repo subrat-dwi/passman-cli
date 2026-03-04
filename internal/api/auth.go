@@ -54,7 +54,7 @@ func (a *AuthAPI) Register(email, password string) (*RegisterResponse, error) {
 
 	resp, err := a.client.HTTP.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, wrapNetworkError(err)
 	}
 	defer resp.Body.Close()
 
@@ -83,7 +83,7 @@ func (a *AuthAPI) Login(email, password string) (*LoginResponse, error) {
 
 	resp, err := a.client.HTTP.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, wrapNetworkError(err)
 	}
 	defer resp.Body.Close()
 

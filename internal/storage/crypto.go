@@ -6,15 +6,14 @@ import (
 
 	"github.com/subrat-dwi/passman-cli/internal/crypto"
 	"github.com/subrat-dwi/passman-cli/internal/usererror"
-	"github.com/zalando/go-keyring"
 )
 
 func (s *Store) SaveSalt(salt string) error {
-	return keyring.Set(s.Service, s.User+"_salt", salt)
+	return secureSet(s.Service, s.User+"_salt", salt)
 }
 
 func (s *Store) GetSalt() ([]byte, error) {
-	salt, err := keyring.Get(s.Service, s.User+"_salt")
+	salt, err := secureGet(s.Service, s.User+"_salt")
 	if err != nil {
 		return nil, usererror.ErrNoSaltFound
 	}
@@ -26,17 +25,17 @@ func (s *Store) GetSalt() ([]byte, error) {
 }
 
 func (s *Store) DeleteSalt() error {
-	return keyring.Delete(s.Service, s.User+"_salt")
+	return secureDelete(s.Service, s.User+"_salt")
 }
 
 // SaveKeyVerifier stores an encrypted verification token (ciphertext:nonce)
 func (s *Store) SaveKeyVerifier(ciphertext, nonce string) error {
-	return keyring.Set(s.Service, s.User+"_key_verifier", ciphertext+":"+nonce)
+	return secureSet(s.Service, s.User+"_key_verifier", ciphertext+":"+nonce)
 }
 
 // GetKeyVerifier retrieves the encrypted verification token
 func (s *Store) GetKeyVerifier() (ciphertext, nonce string, err error) {
-	verifier, err := keyring.Get(s.Service, s.User+"_key_verifier")
+	verifier, err := secureGet(s.Service, s.User+"_key_verifier")
 	if err != nil {
 		return "", "", err
 	}
