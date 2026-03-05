@@ -2,6 +2,8 @@
 
 A secure, cross-platform command-line password manager that keeps your credentials safe with end-to-end encryption.
 
+### [🛡️Visit Product Page](https://passman.subratdwivedi.dev)
+
 ![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
