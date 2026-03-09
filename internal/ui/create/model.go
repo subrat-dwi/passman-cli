@@ -41,6 +41,7 @@ func NewCreatePasswordModel(app *app.App) createPasswordModel {
 	password.CharLimit = 256
 	password.Width = 40
 	password.Prompt = "  "
+	password.EchoMode = textinput.EchoPassword
 
 	return createPasswordModel{
 		inputs:   []textinput.Model{name, username, password},

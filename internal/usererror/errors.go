@@ -1,16 +1,23 @@
 package usererror
 
 import (
-	"fmt"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
+
+// Styles for error output
+var (
+	errorStyle = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "196", Dark: "203"})
+	hintStyle  = lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "241", Dark: "241"})
 )
 
 // User-friendly error messages
 var (
 	// Authentication errors
-	ErrNotLoggedIn        = New("You're not logged in", "Please run 'pman login' first to access your vault")
+	ErrNotLoggedIn        = New("You're not logged in", "Please run 'pman auth login' first to access your vault")
 	ErrInvalidPassword    = New("Incorrect master password", "Please try again with the correct password")
-	ErrSessionExpired     = New("Your session has expired", "Please login again with 'pman login'")
+	ErrSessionExpired     = New("Your session has expired", "Please login again with 'pman auth login'")
 	ErrInvalidEmail       = New("Invalid email address", "Please enter a valid email like user@example.com")
 	ErrEmailInUse         = New("Email already registered", "Try logging in instead, or use a different email")
 	ErrInvalidCredentials = New("Invalid email or password", "Please check your credentials and try again")
@@ -45,10 +52,11 @@ type UserError struct {
 }
 
 func (e *UserError) Error() string {
+	msg := errorStyle.Render("✗") + " " + e.Message
 	if e.Hint != "" {
-		return fmt.Sprintf("%s\n  → %s", e.Message, e.Hint)
+		return msg + "\n  " + hintStyle.Render("→ "+e.Hint)
 	}
-	return e.Message
+	return msg
 }
 
 // New creates a new UserError

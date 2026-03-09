@@ -9,6 +9,7 @@ import (
 	"github.com/creativeprojects/go-selfupdate"
 	"github.com/spf13/cobra"
 	"github.com/subrat-dwi/passman-cli/internal/service"
+	"github.com/subrat-dwi/passman-cli/internal/ui/styles"
 )
 
 const (
@@ -35,8 +36,8 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	// Strip 'v' prefix if present for comparison
 	cleanVersion := strings.TrimPrefix(currentVersion, "v")
 
-	fmt.Printf("Current version: %s\n", currentVersion)
-	fmt.Println("Checking for updates...")
+	fmt.Printf("%s %s\n", styles.Dim.Render("Current version:"), styles.Bold.Render(currentVersion))
+	fmt.Println(styles.Dim.Render("Checking for updates..."))
 
 	source, err := selfupdate.NewGitHubSource(selfupdate.GitHubConfig{})
 	if err != nil {
@@ -57,26 +58,35 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if !found {
-		fmt.Println("No releases found.")
+		fmt.Println(styles.WarningMsg("No releases found."))
 		return nil
 	}
 
-	fmt.Printf("Latest version: %s\n", latest.Version())
+	fmt.Printf("%s %s\n", styles.Dim.Render("Latest version: "), styles.Info.Render(latest.Version()))
 
 	if !latest.GreaterThan(cleanVersion) {
-		fmt.Println("You are already running the latest version!")
+		fmt.Println(styles.SuccessMsg("You are already running the latest version!"))
 		return nil
 	}
 
-	fmt.Printf("\nNew version available: %s → %s\n", currentVersion, latest.Version())
-	fmt.Printf("Release notes: https://github.com/%s/%s/releases/tag/v%s\n", repoOwner, repoName, latest.Version())
+	fmt.Printf("\n%s %s %s %s\n",
+		styles.Highlight.Render("New version available:"),
+		styles.Dim.Render(currentVersion),
+		styles.Dim.Render("→"),
+		styles.Info.Render(latest.Version()))
+	fmt.Printf("%s https://github.com/%s/%s/releases/tag/v%s\n",
+		styles.Dim.Render("Release notes:"),
+		repoOwner, repoName, latest.Version())
 
 	if checkOnly {
-		fmt.Println("\nRun 'pman update' (without --check) to install the update.")
+		fmt.Printf("\n%s\n", styles.InfoMsg("Run 'pman update' (without --check) to install the update."))
 		return nil
 	}
 
-	fmt.Printf("\nDownloading %s for %s/%s...\n", latest.Version(), runtime.GOOS, runtime.GOARCH)
+	fmt.Printf("\n%s %s for %s/%s...\n",
+		styles.Dim.Render("Downloading"),
+		styles.Info.Render(latest.Version()),
+		runtime.GOOS, runtime.GOARCH)
 
 	exe, err := selfupdate.ExecutablePath()
 	if err != nil {
@@ -87,6 +97,6 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to update: %w", err)
 	}
 
-	fmt.Printf("\nSuccessfully updated to version %s!\n", latest.Version())
+	fmt.Printf("\n%s\n", styles.SuccessMsg(fmt.Sprintf("Successfully updated to version %s!", latest.Version())))
 	return nil
 }

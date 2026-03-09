@@ -3,6 +3,8 @@ package list
 import (
 	"fmt"
 	"strings"
+
+	"github.com/subrat-dwi/passman-cli/internal/ui/styles"
 )
 
 func (m listModel) View() string {
@@ -11,7 +13,7 @@ func (m listModel) View() string {
 	}
 
 	if m.err != "" {
-		return fmt.Sprintf("Error: %s\n\nPress ESC to go back", m.err)
+		return fmt.Sprintf("%s\n\nPress ESC to go back", styles.ErrorMsg(m.err))
 	}
 
 	switch m.state {
@@ -29,10 +31,10 @@ func (m listModel) View() string {
 func (m listModel) viewList() string {
 	var b strings.Builder
 	if m.statusMsg != "" {
-		b.WriteString(fmt.Sprintf("  ✓ %s\n\n", m.statusMsg))
+		b.WriteString(fmt.Sprintf("  %s\n\n", styles.SuccessMsg(m.statusMsg)))
 	}
 	b.WriteString(m.list.View())
-	b.WriteString("\n  [enter] view  [u] edit  [d] delete  [q] quit")
+	b.WriteString("\n" + styles.Dim.Render("  [enter] view  [u] edit  [d] delete  [q] quit"))
 	return b.String()
 }
 
@@ -43,23 +45,21 @@ func (m listModel) viewDetail() string {
 
 	var b strings.Builder
 	if m.statusMsg != "" {
-		b.WriteString(fmt.Sprintf("  ✓ %s\n\n", m.statusMsg))
+		b.WriteString(fmt.Sprintf("  %s\n\n", styles.SuccessMsg(m.statusMsg)))
 	}
-	b.WriteString("╭──────────────────────────────────────╮\n")
-	b.WriteString("│          Password Details            │\n")
-	b.WriteString("╰──────────────────────────────────────╯\n\n")
-	b.WriteString(fmt.Sprintf("  Service:  %s\n", m.selected.Name))
-	b.WriteString(fmt.Sprintf("  Username: %s\n", m.selected.Username))
-	b.WriteString(fmt.Sprintf("  Password: %s\n", m.selected.Password))
-	b.WriteString("\n  [c] copy  [u] edit  [d] delete  [esc] back  [q] quit")
+	b.WriteString(styles.Box("Password Details", 38))
+	b.WriteString("\n\n")
+	b.WriteString(fmt.Sprintf("  %s  %s\n", styles.Dim.Render("Service:"), m.selected.Name))
+	b.WriteString(fmt.Sprintf("  %s %s\n", styles.Dim.Render("Username:"), m.selected.Username))
+	b.WriteString(fmt.Sprintf("  %s %s\n", styles.Dim.Render("Password:"), m.selected.Password))
+	b.WriteString("\n" + styles.Dim.Render("  [c] copy  [u] edit  [d] delete  [esc] back  [q] quit"))
 	return b.String()
 }
 
 func (m listModel) viewEdit() string {
 	var b strings.Builder
-	b.WriteString("╭──────────────────────────────────────╮\n")
-	b.WriteString("│           Edit Password              │\n")
-	b.WriteString("╰──────────────────────────────────────╯\n\n")
+	b.WriteString(styles.Box("Edit Password", 38))
+	b.WriteString("\n\n")
 
 	for i, input := range m.editInputs {
 		label := ""
@@ -74,22 +74,21 @@ func (m listModel) viewEdit() string {
 
 		cursor := " "
 		if editField(i) == m.editFocus {
-			cursor = ">"
+			cursor = styles.Cursor()
 		}
 		b.WriteString(fmt.Sprintf(" %s %-10s %s\n", cursor, label+":", input.View()))
 	}
 
-	b.WriteString("\n  [tab/↑↓] navigate  [enter] save  [esc] cancel")
+	b.WriteString("\n" + styles.Dim.Render("  [tab/↑↓] navigate  [enter] save  [esc] cancel"))
 	return b.String()
 }
 
 func (m listModel) viewDeleteConfirm() string {
 	var b strings.Builder
-	b.WriteString("╭──────────────────────────────────────╮\n")
-	b.WriteString("│         Delete Password?             │\n")
-	b.WriteString("╰──────────────────────────────────────╯\n\n")
+	b.WriteString(styles.Box("Delete Password?", 38))
+	b.WriteString("\n\n")
 	b.WriteString("  Are you sure you want to delete this password?\n")
-	b.WriteString("  This action cannot be undone.\n\n")
-	b.WriteString("  [y] Yes, delete  [n] No, cancel")
+	b.WriteString(fmt.Sprintf("  %s\n\n", styles.Warning.Render("This action cannot be undone.")))
+	b.WriteString(styles.Dim.Render("  [y] Yes, delete  [n] No, cancel"))
 	return b.String()
 }

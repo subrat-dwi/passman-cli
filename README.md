@@ -1,43 +1,65 @@
 # Passman CLI
 
-A secure, cross-platform command-line password manager that keeps your credentials safe with end-to-end encryption.
+**Access your passwords from any terminal, anywhere.**
+
+A secure, cloud-synced command-line password manager. Install it on any machine, login, and instantly access all your passwords — then logout and leave no trace.
 
 ### [🛡️Visit Product Page](https://passman.subratdwivedi.dev)
 
 ![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+## 💡 Why Passman CLI?
+
+**The problem**: You're on a friend's laptop, a work computer, or a server — and you need a password. Your passwords are locked in a browser extension or app on your main device.
+
+**The solution**: Passman CLI stores your passwords securely in the cloud. Just open a terminal, install pman, login with your master password, and access your entire vault. When you're done, logout — nothing stays behind.
+
+```bash
+# On any computer with a terminal
+curl -L .../pman-linux-amd64 -o pman && chmod +x pman
+./pman auth login
+./pman list              # Access all your passwords
+./pman auth logout       # Clean exit - no traces left
+```
+
+### Perfect for:
+- 🖥️ **SSH into servers** — Need database credentials on a remote machine?
+- 👥 **Borrowing someone's computer** — Quick access, then logout safely
+- 🔄 **Multi-device workflow** — Same passwords everywhere without sync hassle
+- 🐧 **Terminal-first users** — No GUI needed, works over SSH
+
 ## ✨ Features
 
-- **End-to-End Encryption** — Your passwords are encrypted locally before being sent to the server. Only you can decrypt them.
-- **Zero-Knowledge Architecture** — Your master password never leaves your device. The server only stores encrypted data.
-- **Secure Key Management** — Uses a background agent to keep your encryption key in memory, auto-locking after inactivity.
-- **Cross-Platform** — Works on Windows, macOS, and Linux (including WSL2).
-- **Interactive TUI** — Beautiful terminal user interface for browsing, searching, editing, and deleting passwords.
-- **Clipboard Integration** — Copy passwords to clipboard with automatic clearing after 60 seconds.
-- **Offline Fallback Storage** — Automatic encrypted file-based storage when system keyring is unavailable.
-- **Self-Update** — Update to the latest version with a single command (`pman update`).
+- **Cloud-Synced Vault** — Your passwords live in the cloud, accessible from any device with a terminal.
+- **End-to-End Encryption** — Passwords are encrypted locally before upload. The server only stores encrypted data it cannot read.
+- **Zero-Knowledge Architecture** — Your master password never leaves your device. We can't access your vault even if we wanted to.
+- **Portable** — Single binary, no dependencies. Download, login, use, logout.
+- **Auto-Lock Security** — Agent wipes encryption key from memory after 10 minutes of inactivity.
+- **Cross-Platform** — Works on Windows, macOS, and Linux (including WSL2 and remote servers).
+- **Interactive TUI** — Beautiful terminal interface for browsing, searching, and managing passwords.
+- **Self-Update** — Update to the latest version with `pman update`.
 
 ## 🔐 How It Works
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   You       │────▶│  Passman    │────▶│   Server    │
-│             │     │    CLI      │     │             │
+│   You       │────▶│  Passman    │────▶│   Cloud     │
+│ (any device)│     │    CLI      │     │   Server    │
 └─────────────┘     └─────────────┘     └─────────────┘
        │                   │                   │
        │                   │                   │
-  Master Password    Local Encryption    Encrypted Data
-  (never sent)       with your key       (cannot decrypt)
+  Master Password    Local Encryption    Encrypted Vault
+  (never sent)       (AES-256-GCM)       (we can't decrypt)
 ```
 
-### Security Architecture
+### The Security Model
 
-1. **Registration/Login**: Your master password is used to derive an encryption key using Argon2id (memory-hard KDF).
-2. **Key Storage**: The derived key is held in a background agent process, never written to disk.
-3. **Encryption**: All passwords are encrypted with AES-256-GCM before leaving your device.
-4. **Auto-Lock**: The agent automatically wipes the key from memory after 10 minutes of inactivity.
-5. **Re-authentication**: When the agent locks, you'll be prompted for your master password to continue.
+1. **Your vault lives in the cloud** — Encrypted passwords are stored on our servers, so you can access them from anywhere.
+2. **Encryption happens on your device** — Before any data leaves your machine, it's encrypted with a key derived from your master password using Argon2id.
+3. **We never see your passwords** — The server only stores encrypted blobs. Without your master password (which we never receive), the data is meaningless.
+4. **Nothing persists locally** — When you logout, credentials are wiped. On a borrowed computer, you leave no trace.
+5. **Auto-lock protection** — If you forget to logout, the agent wipes the encryption key from memory after 10 minutes.
 
 ## 📥 Installation
 
@@ -89,7 +111,7 @@ sudo curl -L https://github.com/subrat-dwi/passman-cli/releases/latest/download/
 sudo chmod +x /usr/local/bin/pman
 
 # Verify installation
-pman --help
+pman --version
 
 ```
 
@@ -109,7 +131,9 @@ mv pman /usr/local/bin/  # Linux/macOS
 
 ## 🚀 Quick Start
 
-### 1. Create an Account
+### First Time Setup (On Your Main Device)
+
+#### 1. Create an Account
 
 ```bash
 pman auth register
@@ -119,26 +143,22 @@ You'll be prompted for:
 - **Email**: Your account email
 - **Master Password**: Choose a strong password (min 8 chars, requires uppercase, lowercase, number, and special character)
 
-> ⚠️ **Important**: Remember your master password! It cannot be recovered if lost.
+> ⚠️ **Important**: Your master password cannot be recovered, so remember it. It's the key to your entire vault.
 
-### 2. Login
-
-```bash
-pman auth login
-```
-
-### 3. Add a Password
+#### 2. Add Your Passwords
 
 ```bash
 pman create
 ```
 
-Enter the service name (e.g., "Gmail"), username, and password.
+Enter the service name (e.g., "Gmail"), username, and password. Everything syncs to the cloud automatically.
 
-### 4. View Your Passwords
+### Using On Any Device
 
 ```bash
-pman list
+pman auth login    # Login with your email + master password
+pman list          # Browse/search all your passwords
+pman auth logout   # Clean exit when done
 ```
 
 This opens an interactive list where you can:
@@ -178,7 +198,7 @@ This opens an interactive list where you can:
 
 | Command | Description |
 |---------|-------------|
-| `pman version` | Show version information |
+| `pman --version`, `pman -v` | Show version information |
 | `pman update` | Update pman to the latest version |
 | `pman update --check` | Check for updates without installing |
 | `pman --help` | Show help |
@@ -195,31 +215,48 @@ Your master password is the key to all your passwords. Choose wisely:
 - ❌ Don't reuse passwords from other services
 - ❌ Don't use personal information (birthdays, names)
 
-### Operational Security
+### On Your Own Device
 
 - **Lock when away**: Run `pman agent lock` before leaving your computer
-- **Don't share your master password**: It's the only password you need to remember
-- **Use on trusted devices only**: Avoid public or shared computers
+- **Auto-lock is your friend**: The agent wipes keys after 10 minutes of inactivity
+
+### On a Borrowed/Shared Computer
+
+- ✅ **Always logout when done**: `pman auth logout` wipes all local credentials
+- ✅ **Don't save master password**: If prompted by the system to save passwords, decline
+- ✅ **Use in private**: Make sure no one is watching when you type your master password
+- ⚠️ **Be aware of keyloggers**: Only use pman on computers you reasonably trust
 
 ## 💾 Data Storage
 
-### Credentials Storage
+### Where Your Passwords Live
 
-| Platform | Primary Storage | Fallback |
-|----------|----------------|----------|
-| Windows | Windows Credential Manager | Encrypted file |
-| macOS | Keychain | Encrypted file |
-| Linux/WSL | Encrypted file | — |
+**In the cloud** — Your encrypted vault is stored on Passman's servers. This is what enables access from any device.
 
-Fallback storage location: `~/.passman/vault.enc`
+### What's Stored Locally (Temporarily)
 
-### What's Stored Locally
+While logged in, pman stores minimal session data:
 
-- Access token (for API authentication)
-- Salt (for key derivation)
-- Key verifier (encrypted token to verify master password)
+| Data | Purpose | Cleared on Logout? |
+|------|---------|-------------------|
+| Access token | API authentication | ✅ Yes |
+| Salt | Key derivation | ✅ Yes |
+| Key verifier | Verify master password | ✅ Yes |
+| Encryption key | Decrypt passwords (in memory only) | ✅ Yes |
 
-**Never stored**: Your master password or encryption key
+**Never stored anywhere**: Your master password
+
+### After Logout
+
+Running `pman auth logout` wipes all local credentials. On a borrowed computer, it's as if pman was never used.
+
+### Platform-Specific Storage
+
+| Platform | Session Storage | 
+|----------|----------------|
+| Windows | Windows Credential Manager |
+| macOS | Keychain |
+| Linux/WSL | Encrypted file (`~/.passman/`) |
 
 ## 🔧 Troubleshooting
 
