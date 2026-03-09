@@ -19,6 +19,7 @@ func NewRootCmd(app *app.App) *cobra.Command {
 	rootCmd.SuggestionsMinimumDistance = 2
 
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(auth.NewAuthCmd(app))
 	rootCmd.AddCommand(passwords.NewListCmd(app))
 	rootCmd.AddCommand(passwords.NewCreateCmd(app))

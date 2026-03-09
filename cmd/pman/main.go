@@ -9,9 +9,15 @@ import (
 	"github.com/subrat-dwi/passman-cli/cmd"
 	"github.com/subrat-dwi/passman-cli/internal/agent"
 	"github.com/subrat-dwi/passman-cli/internal/app"
+	"github.com/subrat-dwi/passman-cli/internal/service"
 )
 
+// version is set at build time via ldflags
+var version = "dev"
+
 func main() {
+	// Set the version for the service package
+	service.SetVersion(version)
 
 	// start agent server when command is exactly "pman agent"
 	if len(os.Args) == 2 && os.Args[1] == "agent" {

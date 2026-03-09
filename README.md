@@ -14,6 +14,7 @@ A secure, cross-platform command-line password manager that keeps your credentia
 - **Interactive TUI** — Beautiful terminal user interface for browsing, searching, editing, and deleting passwords.
 - **Clipboard Integration** — Copy passwords to clipboard with automatic clearing after 60 seconds.
 - **Offline Fallback Storage** — Automatic encrypted file-based storage when system keyring is unavailable.
+- **Self-Update** — Update to the latest version with a single command (`pman update`).
 
 ## 🔐 How It Works
 
@@ -175,6 +176,8 @@ This opens an interactive list where you can:
 | Command | Description |
 |---------|-------------|
 | `pman version` | Show version information |
+| `pman update` | Update pman to the latest version |
+| `pman update --check` | Check for updates without installing |
 | `pman --help` | Show help |
 
 ## 🔒 Security Best Practices
@@ -251,6 +254,26 @@ Configuration file location: `~/.passman/config.yaml`
 api_base_url: https://api.passman.example.com
 ```
 
+## 🔄 Updating
+
+### Self-Update (Recommended)
+
+Pman can update itself to the latest version:
+
+```bash
+# Check for updates
+pman update --check
+
+# Update to the latest version
+pman update
+```
+
+**Note**: On Windows, you may need to run as Administrator. On Linux/macOS, you may need `sudo` depending on where pman is installed.
+
+### Manual Update
+
+Alternatively, download the latest release from the [Releases page](https://github.com/subrat-dwi/passman-cli/releases) and replace your existing binary.
+
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -271,6 +294,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Cobra](https://github.com/spf13/cobra) — CLI framework
 - [go-keyring](https://github.com/zalando/go-keyring) — Cross-platform keyring access
 - [Argon2](https://github.com/P-H-C/phc-winner-argon2) — Password hashing
+- [go-selfupdate](https://github.com/creativeprojects/go-selfupdate) — Self-update mechanism
 
 ---
 
