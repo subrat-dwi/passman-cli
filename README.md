@@ -9,7 +9,21 @@ A secure, cloud-synced command-line password manager. Install it on any machine,
 ![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## 💡 Why Passman CLI?
+## � Table of Contents
+
+- [Why Passman CLI?](#-why-passman-cli)
+- [Features](#-features)
+- [How It Works](#-how-it-works)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Command Reference](#-command-reference)
+- [Security Best Practices](#-security-best-practices)
+- [Data Storage](#-data-storage)
+- [Troubleshooting](#-troubleshooting)
+- [Updating](#-updating)
+- [Contributing](#-contributing)
+
+## �💡 Why Passman CLI?
 
 **The problem**: You're on a friend's laptop, a work computer, or a server — and you need a password. Your passwords are locked in a browser extension or app on your main device.
 
