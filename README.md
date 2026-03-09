@@ -83,13 +83,14 @@ chmod +x /usr/local/bin/pman
 
 ```bash
 # Download
-curl -L https://github.com/subrat-dwi/passman-cli/releases/latest/download/pman-linux-amd64 -o ~/.local/bin/pman
+sudo curl -L https://github.com/subrat-dwi/passman-cli/releases/latest/download/pman-linux-amd64 -o /usr/local/bin/pman
 
 # Make executable
-chmod +x ~/.local/bin/pman
+sudo chmod +x /usr/local/bin/pman
 
-# Ensure ~/.local/bin is in PATH (add to ~/.bashrc or ~/.zshrc)
-export PATH="$HOME/.local/bin:$PATH"
+# Verify installation
+pman --help
+
 ```
 
 ### Build from Source
