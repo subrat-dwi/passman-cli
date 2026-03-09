@@ -19,6 +19,7 @@ type createPasswordModel struct {
 	err      string
 	fieldErr []string
 	loading  bool
+	success  bool
 	app      *app.App
 }
 

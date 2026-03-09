@@ -10,6 +10,12 @@ import (
 func (m createPasswordModel) View() string {
 	var b strings.Builder
 
+	if m.success {
+		b.WriteString(styles.SuccessMsg("Password saved successfully!"))
+		b.WriteString("\n")
+		return b.String()
+	}
+
 	b.WriteString(styles.Box("Save New Password", 38))
 	b.WriteString("\n\n")
 

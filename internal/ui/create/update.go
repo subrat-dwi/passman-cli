@@ -75,6 +75,7 @@ func (m createPasswordModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Allow retry
 			return m, nil
 		}
+		m.success = true
 		return m, tea.Quit
 	}
 
