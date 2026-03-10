@@ -4,16 +4,24 @@
 
 A secure, cloud-synced command-line password manager. Install it on any machine, login, and instantly access all your passwords — then logout and leave no trace.
 
-### [🛡️Visit Product Page](https://passman.subratdwivedi.dev)
+### [🌐 Visit Product Page](https://passman.subratdwivedi.dev)
 
-![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
+![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
+![Latest Release](https://img.shields.io/github/v/release/subrat-dwi/passman-cli?style=flat&color=blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
+![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
 
-## � Table of Contents
+---
+
+![PassmanDemoGif](PassmanDemoGif.gif)
+
+## 📚 Table of Contents
 
 - [Why Passman CLI?](#-why-passman-cli)
 - [Features](#-features)
 - [How It Works](#-how-it-works)
+- [Architecture Overview](#-architecture-overview)
+- [Security Model](#-security-model)
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
 - [Command Reference](#-command-reference)
@@ -21,9 +29,10 @@ A secure, cloud-synced command-line password manager. Install it on any machine,
 - [Data Storage](#-data-storage)
 - [Troubleshooting](#-troubleshooting)
 - [Updating](#-updating)
+- [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
 
-## �💡 Why Passman CLI?
+## 💡 Why Passman CLI?
 
 **The problem**: You're on a friend's laptop, a work computer, or a server — and you need a password. Your passwords are locked in a browser extension or app on your main device.
 
@@ -74,6 +83,101 @@ curl -L .../pman-linux-amd64 -o pman && chmod +x pman
 3. **We never see your passwords** — The server only stores encrypted blobs. Without your master password (which we never receive), the data is meaningless.
 4. **Nothing persists locally** — When you logout, credentials are wiped. On a borrowed computer, you leave no trace.
 5. **Auto-lock protection** — If you forget to logout, the agent wipes the encryption key from memory after 10 minutes.
+
+## 🏗️ Architecture Overview
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                              PASSMAN CLI ARCHITECTURE                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────────────────┐
+│   CLI Commands  │      │  Background     │      │       Cloud Backend         │
+│                 │      │    Agent        │      │                             │
+│  ┌───────────┐  │      │  ┌───────────┐  │      │  ┌───────────────────────┐  │
+│  │ auth      │  │ IPC  │  │ Key Store │  │ HTTPS│  │     API Gateway       │  │
+│  │ create    │◄─┼──────┼──►(in-memory)│◄─┼──────┼──►   (REST + TLS 1.3)    │  │
+│  │ list      │  │      │  └───────────┘  │      │  └───────────┬───────────┘  │
+│  │ update    │  │      │                 │      │              │              │
+│  └───────────┘  │      │  ┌───────────┐  │      │  ┌───────────▼───────────┐  │
+│                 │      │  │ Auto-Lock │  │      │  │   PostgreSQL DB       │  │
+│  ┌───────────┐  │      │  │  Timer    │  │      │  │  (encrypted blobs)    │  │
+│  │ Bubble Tea│  │      │  │ (10 min)  │  │      │  └───────────────────────┘  │
+│  │    TUI    │  │      │  └───────────┘  │      │                             │
+│  └───────────┘  │      │                 │      │  ┌───────────────────────┐  │
+└─────────────────┘      └─────────────────┘      │  │   Auth Service        │  │
+                                                  │  │  (JWT + Refresh)      │  │
+┌─────────────────────────────────────────┐       │  └───────────────────────┘  │
+│           LOCAL ENCRYPTION LAYER        │       └─────────────────────────────┘
+│                                         │
+│  ┌─────────┐    ┌─────────┐    ┌─────┐  │
+│  │ Argon2id│───►│AES-256  │───►│ API │  │      Encrypted data only
+│  │ (KDF)   │    │  -GCM   │    │Send │  │◄─────────────────────────
+│  └─────────┘    └─────────┘    └─────┘  │      Server cannot decrypt
+│       ▲                                 │
+│       │                                 │
+│  Master Password (never transmitted)    │
+└─────────────────────────────────────────┘
+```
+
+### Component Responsibilities
+
+| Component | Purpose |
+|-----------|----------|
+| **CLI Commands** | User-facing interface for all operations |
+| **Background Agent** | Holds encryption key in memory, auto-locks after inactivity |
+| **Local Encryption** | Derives keys and encrypts/decrypts vault data client-side |
+| **Cloud Backend** | Stores encrypted vault, handles auth, syncs across devices |
+
+## 🛡️ Security Model
+
+Passman follows a **zero-knowledge architecture** — we cannot access your passwords even if we wanted to.
+
+### Cryptographic Design
+
+| Layer | Algorithm | Purpose |
+|-------|-----------|----------|
+| **Key Derivation** | Argon2id | Derive encryption key from master password |
+| **Vault Encryption** | AES-256-GCM | Encrypt/decrypt password entries |
+| **Transport** | TLS 1.3 | Secure client-server communication |
+| **Authentication** | JWT | Session management |
+
+### Security Boundaries
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        TRUST BOUNDARY                               │
+├─────────────────────────────┬───────────────────────────────────────┤
+│      CLIENT (Trusted)       │         SERVER (Untrusted)            │
+├─────────────────────────────┼───────────────────────────────────────┤
+│  • Master password          │  • Encrypted vault blobs              │
+│  • Derived encryption key   │  • Salts (public)                     │
+│  • Decrypted passwords      │  • Key verifiers (public)             │
+│  • Plaintext operations     │  • Access/refresh tokens              │
+└─────────────────────────────┴───────────────────────────────────────┘
+```
+
+### Threats Mitigated
+
+| Threat | Mitigation |
+|--------|-------------|
+| **Server Compromise** | Server only stores encrypted blobs — useless without master password |
+| **Database Leak** | Vault data is AES-256-GCM encrypted; attackers get ciphertext only |
+| **Insider Access** | Zero-knowledge design — even operators cannot decrypt user data |
+| **Network Interception** | TLS 1.3 for all API communication |
+| **Brute Force** | Argon2id with tuned parameters makes offline attacks computationally expensive |
+| **Session Hijacking** | Short-lived JWTs |
+
+### Threats NOT Mitigated
+
+| Threat | Why |
+|--------|------|
+| **Compromised Client Machine** | If your device has malware, attackers can capture decrypted data |
+| **Keyloggers** | Master password can be captured at input time |
+| **Physical Access** | An unlocked agent on an unattended machine exposes keys |
+| **Weak Master Password** | User responsibility — we enforce minimum complexity |
+
+> ⚠️ **Best Practice**: Only use Passman on devices you trust. Always logout on shared computers.
 
 ## 📥 Installation
 
@@ -327,6 +431,18 @@ pman update
 ### Manual Update
 
 Alternatively, download the latest release from the [Releases page](https://github.com/subrat-dwi/passman-cli/releases) and replace your existing binary.
+
+## 🗺️ Roadmap
+
+Planned improvements:
+
+- [ ] Browser extension for quick autofill
+- [ ] Vault export / backup support (encrypted JSON)
+- [ ] Mobile-friendly client (iOS/Android)
+- [ ] Password generator with customizable rules
+- [ ] Offline mode with local encrypted cache
+
+Have a feature request? [Open an issue](https://github.com/subrat-dwi/passman-cli/issues) — we'd love to hear from you!
 
 ## 🤝 Contributing
 
