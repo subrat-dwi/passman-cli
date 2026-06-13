@@ -222,6 +222,7 @@ chmod +x /usr/local/bin/pman
 ### Linux
 
 ```bash
+# --- WITH SUDO ---
 # Download
 sudo curl -L https://github.com/subrat-dwi/passman-cli/releases/latest/download/pman-linux-amd64 -o /usr/local/bin/pman
 
@@ -231,6 +232,12 @@ sudo chmod +x /usr/local/bin/pman
 # Verify installation
 pman --version
 
+# --- WITHOUT SUDO ---
+mkdir -p ~/.local/bin
+curl -L https://github.com/subrat-dwi/passman-cli/releases/latest/download/pman-linux-amd64 -o ~/.local/bin/pman
+chmod +x ~/.local/bin/pman
+export PATH="$HOME/.local/bin:$PATH"  # add this to ~/.bashrc or ~/.zshrc to persist
+pman --version
 ```
 
 ### Build from Source
