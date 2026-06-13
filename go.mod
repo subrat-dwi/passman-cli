@@ -1,6 +1,6 @@
 module github.com/subrat-dwi/passman-cli
 
-go 1.24
+go 1.24.11
 
 require (
 	github.com/Microsoft/go-winio v0.6.2
