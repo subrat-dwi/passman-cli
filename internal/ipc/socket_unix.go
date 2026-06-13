@@ -15,8 +15,12 @@ func endpoint() string {
 
 func listen() (net.Listener, error) {
 	path := endpoint()
-	os.MkdirAll(filepath.Dir(path), 0700)
-	os.Remove(path)
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		return nil, err
+	}
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return nil, err
+	}
 	return net.Listen("unix", path)
 }
 

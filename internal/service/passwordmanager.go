@@ -53,7 +53,9 @@ func (s *PasswordService) PromptAndUnlock() error {
 	plaintext, err := agent.Decrypt(ciphertext, nonce)
 	if err != nil || plaintext != KeyVerifierPlaintext {
 		// Wrong password - lock agent and return error
-		agent.Lock()
+		if err := agent.Lock(); err != nil {
+			fmt.Println("  Warning: Failed to lock agent after failed unlock attempt:", err)
+		}
 		return usererror.ErrInvalidPassword
 	}
 

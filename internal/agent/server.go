@@ -49,15 +49,19 @@ func handleConn(conn net.Conn, state *State) {
 
 	var req Request
 	if err := json.NewDecoder(conn).Decode(&req); err != nil {
-		json.NewEncoder(conn).Encode(Response{
+		if err := json.NewEncoder(conn).Encode(Response{
 			OK:    false,
 			Error: "invalid request",
-		})
+		}); err != nil {
+			log.Println("Failed to send error response:", err)
+		}
 		return
 	}
 
 	log.Printf("Received command: %s\n", req.Cmd)
 	resp := state.Handle(req)
 	log.Printf("Response: OK=%v, Error=%s\n", resp.OK, resp.Error)
-	json.NewEncoder(conn).Encode(resp)
+	if err := json.NewEncoder(conn).Encode(resp); err != nil {
+		log.Println("Failed to send response:", err)
+	}
 }

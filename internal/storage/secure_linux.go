@@ -6,9 +6,9 @@ package storage
 // On Linux (including WSL), keyring access often fails or crashes.
 // Always use file-based storage for reliability.
 
-func checkKeyringAvailable() bool {
-	return false
-}
+// func checkKeyringAvailable() bool {
+// 	return false
+// }
 
 // secureSet stores a value using file-based storage
 func secureSet(service, key, value string) error {

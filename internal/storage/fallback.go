@@ -52,7 +52,10 @@ func getFileStore() (*FileStore, error) {
 		}
 
 		// Load existing data
-		fileStore.load()
+		if err:= fileStore.load(); err != nil {
+			return
+		}
+
 	})
 
 	return fileStore, fileStoreErr

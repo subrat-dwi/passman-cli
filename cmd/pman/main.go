@@ -29,7 +29,9 @@ func main() {
 	app := app.New()
 
 	rootCmd := cmd.NewRootCmd(app)
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func ensureAgentRunning() {
@@ -40,7 +42,9 @@ func ensureAgentRunning() {
 
 	// start agent as a detached background process
 	cmd := exec.Command(os.Args[0], "agent")
-	cmd.Start()
+	if err := cmd.Start(); err != nil {
+		log.Fatal("failed to start agent:", err)
+	}
 
 	// wait briefly (avoid race)
 	for i := 0; i < 5; i++ {

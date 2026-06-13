@@ -13,9 +13,18 @@ func NewLogoutCmd(app *app.App) *cobra.Command {
 		Long:    "Logout and clear your credentials",
 		Aliases: []string{"signout", "out"},
 		Run: func(cmd *cobra.Command, args []string) {
-			app.AuthService.Storage.DeleteAccessToken()
-			app.AuthService.Storage.DeleteSalt()
-			agent.Lock()
+			if err := app.AuthService.Storage.DeleteAccessToken(); err != nil {
+				println("Failed to delete access token:", err.Error())
+				return
+			}
+			if err := app.AuthService.Storage.DeleteSalt(); err != nil {
+				println("Failed to delete salt:", err.Error())
+				return
+			}
+			if err := agent.Lock(); err != nil {
+				println("Failed to lock vault agent:", err.Error())
+				return
+			}
 			app.ResetState()
 			println("Logged out successfully. Vault Agent locked and credentials cleared.")
 		},
