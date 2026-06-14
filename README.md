@@ -6,7 +6,7 @@ A secure, cloud-synced command-line password manager. Install it on any machine,
 
 ### [🌐 Visit Product Page](https://passman.subratdwivedi.dev)
 
-![Go Version](https://img.shields.io/badge/Go-1.21+-00ADD8?style=flat&logo=go)
+![Go Version](https://img.shields.io/badge/Go-1.24.11-00ADD8?style=flat&logo=go)
 ![Latest Release](https://img.shields.io/github/v/release/subrat-dwi/passman-cli?style=flat&color=blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform Support](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)
@@ -86,38 +86,30 @@ curl -L .../pman-linux-amd64 -o pman && chmod +x pman
 
 ## 🏗️ Architecture Overview
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                              PASSMAN CLI ARCHITECTURE                        │
-└──────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    MP([Master password\nnever transmitted]) --> A
 
-┌─────────────────┐      ┌─────────────────┐      ┌─────────────────────────────┐
-│   CLI Commands  │      │  Background     │      │       Cloud Backend         │
-│                 │      │    Agent        │      │                             │
-│  ┌───────────┐  │      │  ┌───────────┐  │      │  ┌───────────────────────┐  │
-│  │ auth      │  │ IPC  │  │ Key Store │  │ HTTPS│  │     API Gateway       │  │
-│  │ create    │◄─┼──────┼──►(in-memory)│◄─┼──────┼──►   (REST + TLS 1.3)    │  │
-│  │ list      │  │      │  └───────────┘  │      │  └───────────┬───────────┘  │
-│  │ update    │  │      │                 │      │              │              │
-│  └───────────┘  │      │  ┌───────────┐  │      │  ┌───────────▼───────────┐  │
-│                 │      │  │ Auto-Lock │  │      │  │   PostgreSQL DB       │  │
-│  ┌───────────┐  │      │  │  Timer    │  │      │  │  (encrypted blobs)    │  │
-│  │ Bubble Tea│  │      │  │ (10 min)  │  │      │  └───────────────────────┘  │
-│  │    TUI    │  │      │  └───────────┘  │      │                             │
-│  └───────────┘  │      │                 │      │  ┌───────────────────────┐  │
-└─────────────────┘      └─────────────────┘      │  │   Auth Service        │  │
-                                                  │  │  (JWT + Refresh)      │  │
-┌─────────────────────────────────────────┐       │  └───────────────────────┘  │
-│           LOCAL ENCRYPTION LAYER        │       └─────────────────────────────┘
-│                                         │
-│  ┌─────────┐    ┌─────────┐    ┌─────┐  │
-│  │ Argon2id│───►│AES-256  │───►│ API │  │      Encrypted data only
-│  │ (KDF)   │    │  -GCM   │    │Send │  │◄─────────────────────────
-│  └─────────┘    └─────────┘    └─────┘  │      Server cannot decrypt
-│       ▲                                 │
-│       │                                 │
-│  Master Password (never transmitted)    │
-└─────────────────────────────────────────┘
+    subgraph LOCAL ["Local encryption layer"]
+        direction LR
+        A[Argon2id KDF] --> B[AES-256-GCM]
+    end
+
+    subgraph CLI ["CLI"]
+        direction LR
+        C[Commands\nauth · create · list · update] <-->|IPC| D[Background agent\nKey store · Auto-lock 10min]
+    end
+
+    B -->|Encrypted blob only| E
+    D <-->|HTTPS + TLS 1.3| E
+
+    subgraph CLOUD ["Cloud backend"]
+        direction LR
+        E[API Gateway\nREST] --> F[(PostgreSQL\nencrypted blobs)]
+        E --> G[Auth service\nJWT + Refresh]
+    end
+
+    CLI <--> LOCAL
 ```
 
 ### Component Responsibilities
