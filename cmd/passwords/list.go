@@ -12,6 +12,7 @@ func NewListCmd(app *app.App) *cobra.Command {
 		Use:   "list",
 		Short: "List all your saved passwords",
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			passwords, err := app.PasswordService.List()
 			if err != nil {
 				return err

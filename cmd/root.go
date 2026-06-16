@@ -29,6 +29,7 @@ func NewRootCmd(app *app.App) *cobra.Command {
 	rootCmd.AddCommand(passwords.NewListCmd(app))
 	rootCmd.AddCommand(passwords.NewCreateCmd(app))
 	rootCmd.AddCommand(agent.NewAgentCmd())
+	rootCmd.AddCommand(configCmd)
 
 	return rootCmd
 }

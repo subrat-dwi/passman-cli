@@ -44,9 +44,14 @@ func (a *AuthAPI) Register(email, password string) (*RegisterResponse, error) {
 		Password: password,
 	})
 
+	url, err := a.client.url("/api/users/register")
+	if err != nil {
+		return nil, err
+	}
+
 	req, _ := http.NewRequest(
 		"POST",
-		a.client.BaseURL+"/api/users/register",
+		url,
 		bytes.NewBuffer(body),
 	)
 
@@ -73,9 +78,14 @@ func (a *AuthAPI) Login(email, password string) (*LoginResponse, error) {
 		Password: password,
 	})
 
+	url, err := a.client.url("/api/users/login")
+	if err != nil {
+		return nil, err
+	}
+
 	req, _ := http.NewRequest(
 		"POST",
-		a.client.BaseURL+"/api/users/login",
+		url,
 		bytes.NewBuffer(body),
 	)
 

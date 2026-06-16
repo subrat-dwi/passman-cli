@@ -23,9 +23,14 @@ type ListPasswordsResponse struct {
 }
 
 func (p *PasswordAPI) ListPasswords(accessToken string) ([]passwordmanager.PasswordEntry, error) {
+
+	url, err := p.client.url("/api/passwords")
+	if err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequest(
 		"GET",
-		p.client.BaseURL+"/api/passwords",
+		url,
 		nil,
 	)
 	if err != nil {
@@ -49,14 +54,19 @@ func (p *PasswordAPI) ListPasswords(accessToken string) ([]passwordmanager.Passw
 }
 
 func (p *PasswordAPI) CreatePassword(accessToken string, entry passwordmanager.PasswordFullEntry) error {
+
 	payload, err := json.Marshal(entry)
+	if err != nil {
+		return err
+	}
+	url, err := p.client.url("/api/passwords")
 	if err != nil {
 		return err
 	}
 
 	req, err := http.NewRequest(
 		"POST",
-		p.client.BaseURL+"/api/passwords",
+		url,
 		bytes.NewReader(payload),
 	)
 	if err != nil {
@@ -79,9 +89,13 @@ func (p *PasswordAPI) CreatePassword(accessToken string, entry passwordmanager.P
 }
 
 func (p *PasswordAPI) GetPassword(accessToken, id string) (*passwordmanager.PasswordFullEntry, error) {
+	url, err := p.client.url("/api/passwords/" + id)
+	if err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequest(
 		"GET",
-		p.client.BaseURL+"/api/passwords/"+id,
+		url,
 		nil,
 	)
 	if err != nil {
@@ -110,9 +124,14 @@ func (p *PasswordAPI) UpdatePassword(accessToken, id string, entry passwordmanag
 		return err
 	}
 
+	url, err := p.client.url("/api/passwords/" + id)
+	if err != nil {
+		return err
+	}
+
 	req, err := http.NewRequest(
 		"PUT",
-		p.client.BaseURL+"/api/passwords/"+id,
+		url,
 		bytes.NewReader(payload),
 	)
 	if err != nil {
@@ -135,9 +154,14 @@ func (p *PasswordAPI) UpdatePassword(accessToken, id string, entry passwordmanag
 }
 
 func (p *PasswordAPI) DeletePassword(accessToken, id string) error {
+	url, err := p.client.url("/api/passwords/" + id)
+	if err != nil {
+		return err
+	}
+
 	req, err := http.NewRequest(
 		"DELETE",
-		p.client.BaseURL+"/api/passwords/"+id,
+		url,
 		nil,
 	)
 	if err != nil {
